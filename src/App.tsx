@@ -8,8 +8,12 @@ import { GoogleGenAI } from "@google/genai";
 import { Send, Image as ImageIcon, Sparkles, User, Heart, Settings, Loader2, Info, RefreshCcw, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Initialize Gemini
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+// Helper to get AI instance
+const getAI = () => {
+  return new GoogleGenAI({ 
+    apiKey: process.env.GEMINI_API_KEY || ''
+  });
+};
 
 interface Message {
   role: 'user' | 'model';
@@ -19,6 +23,7 @@ interface Message {
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [apiBase, setApiBase] = useState('');
   const [setting, setSetting] = useState('');
   const [characterDescription, setCharacterDescription] = useState('');
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -39,7 +44,8 @@ export default function App() {
   const extractCharacter = async () => {
     if (!setting) return;
     try {
-      const response = await genAI.models.generateContent({
+      const ai = getAI();
+      const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [{ text: `Based on this roleplay setting: "${setting}", extract a detailed physical description of the character I am roleplaying with. Focus on facial features, skin tone, hair style, and general build. This will be used to maintain visual consistency in AI images. Keep it concise but descriptive.` }]
       });
@@ -63,9 +69,9 @@ export default function App() {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
-
     try {
-      const response = await genAI.models.generateContent({
+      const ai = getAI();
+      const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [
           {
@@ -99,16 +105,17 @@ export default function App() {
   const handleVisualize = async () => {
     setIsGeneratingImage(true);
     try {
+      const ai = getAI();
       // Ensure we have a character description
       if (!characterDescription) {
         await extractCharacter();
       }
 
       // Get a prompt that combines consistency with the current scenario and recent chat history
-      const promptResponse = await genAI.models.generateContent({
+      const promptResponse = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [{
-          text: `Create a highly detailed, cinematic image generation prompt for an AI image generator. 
+          text: `Create a highly detailed, cinematic image generation prompt for an Z-image turbo model. 
           
           CHARACTER CONSISTENCY (Physical Features): ${characterDescription}
           
@@ -129,7 +136,7 @@ export default function App() {
 
       const visualPrompt = promptResponse.text || `A photorealistic, ultra-detailed portrait of the character in ${setting}, natural HDR lighting, intimate atmosphere.`;
 
-      const imageResponse = await genAI.models.generateContent({
+      const imageResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
           parts: [{ text: visualPrompt }],
@@ -188,23 +195,37 @@ export default function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 h-[calc(100vh-4.5rem)] flex flex-col gap-4">
+        {/* API Base Input */}
+        <section className="bg-white/5 rounded-2xl p-3 border border-white/10 backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-2">
+            <Settings className="w-3.5 h-3.5 text-blue-400" />
+            <h2 className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">API Configuration</h2>
+          </div>
+          <input
+            type="text"
+            value={apiBase}
+            onChange={(e) => setApiBase(e.target.value)}
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+            placeholder="API Base URL (optional, e.g. https://api.example.com)"
+          />
+        </section>
+
         {/* Top Bar: Setting Input */}
         <section className="bg-white/5 rounded-2xl p-3 border border-white/10 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-rose-500" />
             <h2 className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Character & Scenario Definition</h2>
           </div>
-          <div className="flex gap-3">
-            <input
-              type="text"
+          <div className="flex flex-col gap-3">
+            <textarea
               value={setting}
               onChange={(e) => setSetting(e.target.value)}
-              className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none transition-all"
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none transition-all min-h-[80px] resize-none"
               placeholder="e.g. Act as my Indian brother, we are studying in college. He is wearing a skyblue tshirt..."
             />
             <button 
               onClick={extractCharacter}
-              className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all text-rose-400"
+              className="self-end px-6 py-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all text-rose-400"
             >
               Apply Character
             </button>
