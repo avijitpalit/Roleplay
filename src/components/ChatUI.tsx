@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { Send, Image as ImageIcon, Sparkles, User, Heart, Settings, Loader2, Info, RefreshCcw, Eye, EyeOff, Settings2 } from 'lucide-react';
+import { Send, Image as ImageIcon, Sparkles, User, Heart, Settings, Loader2, Info, RefreshCcw, Eye, EyeOff, Settings2, ReceiptIndianRupee } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RPContext } from '../App';
 
@@ -81,13 +81,19 @@ export const ChatUI = () => {
             let prompt = `Roleplay setting: ${setting}
                 ${updatedMessages.map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`).join('\n')}
             `;
-            console.log(prompt);
+            const recentActions = updatedMessages
+            .slice(-2)
+            .map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`)
+            .join('\n');
+            console.log('recentActions', recentActions);
+            // console.log(prompt);
             const response = await fetch(`${apiBase}/chat`, {
                 method: 'POST',
                 headers: {
+                    'Bypass-Tunnel-Reminder': 'true',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ history: prompt })
+                body: JSON.stringify({ history: prompt, recent_actions: recentActions})
             });
             if (!response.ok) {
                 const errorText = await response.text();
@@ -165,6 +171,7 @@ export const ChatUI = () => {
             const response = await fetch(`${apiBase}/generate`, {
                 method: 'POST',
                 headers: {
+                    'Bypass-Tunnel-Reminder': 'true',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
@@ -203,13 +210,6 @@ export const ChatUI = () => {
             setIsGeneratingImage(false);
         }
     };
-
-    /* const resetSession = () => {
-        setMessages([]);
-        setGeneratedImage(null);
-        setCharacterDescription('');
-        extractCharacter();
-    }; */
 
     return (
         <>

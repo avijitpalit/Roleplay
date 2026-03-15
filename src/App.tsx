@@ -55,6 +55,7 @@ export default function App() {
             const response = await fetch(`${apiBase}/init_char_dna`, {
                 method: 'POST',
                 headers: {
+					'Bypass-Tunnel-Reminder': 'true',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ setting_txt: setting })
