@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { Send, Image as ImageIcon, Sparkles, User, Heart, Settings, Loader2, Info, RefreshCcw, Eye, EyeOff, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RPContext } from '../App';
 
 interface Message {
     role: 'User' | 'AI';
@@ -20,15 +21,17 @@ const ChatBubble = () => {
     );
 }
 
-export const ChatUI = ({apiBase, initSetting, characterDescription}) => {
-    const [messages, setMessages] = useState<Message[]>([]);
+export const ChatUI = () => {
+    const { characterDescription, apiBase, setting, messages, setMessages, generatedImage, setGeneratedImage } = React.useContext(RPContext);
+
+    // const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
 
-    const [dna, setDna] = useState("");
+    // const [dna, setDna] = useState("");
 
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+    // const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [showMessages, setShowMessages] = useState(true);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +48,8 @@ export const ChatUI = ({apiBase, initSetting, characterDescription}) => {
 
         const userMessage: Message = { role: 'User', text: input };
         setMessages(prev => [...prev, userMessage]);
+        const updatedMessages = [...messages, userMessage];
+        console.log(updatedMessages);
         setInput('');
         setIsTyping(true);
         try {
@@ -73,8 +78,8 @@ export const ChatUI = ({apiBase, initSetting, characterDescription}) => {
             }); */
 
             // For flask api
-            let prompt = `Roleplay setting: ${initSetting}
-                ${messages.map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`).join('\n')}
+            let prompt = `Roleplay setting: ${setting}
+                ${updatedMessages.map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`).join('\n')}
             `;
             console.log(prompt);
             const response = await fetch(`${apiBase}/chat`, {
@@ -152,9 +157,9 @@ export const ChatUI = ({apiBase, initSetting, characterDescription}) => {
 
             const payload = {
                 refinedPrompt,
-                width: 1024,
-                height: 1024,
-                steps: 9
+                width: 768,
+                height: 1344,
+                steps: 8
             };
             console.log("Generating image via API...");
             const response = await fetch(`${apiBase}/generate`, {

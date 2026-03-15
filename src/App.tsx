@@ -3,11 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, createContext, useContext } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { Send, Image as ImageIcon, Sparkles, User, Heart, Settings, Loader2, Info, RefreshCcw, Eye, EyeOff, Settings2, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatUI } from './components/ChatUI';
+
+export const RPContext = createContext(null);
+
+interface Message {
+    role: 'User' | 'AI';
+    text: string;
+}
 
 // Helper to get AI instance
 const getAI = () => {
@@ -16,29 +23,15 @@ const getAI = () => {
 	});
 };
 
-interface Message {
-	role: 'User' | 'AI';
-	text: string;
-}
-
-const ChatBubble = () => {
-	return (
-		<div className="flex justify-start">
-			<div className="bg-black/50 backdrop-blur-xl border border-white/10 p-4 rounded-2xl rounded-tl-none flex gap-1.5">
-				<span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-				<span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-				<span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce"></span>
-			</div>
-		</div>
-	);
-}
-
 export default function App() {
 	const [settingPanelEnabled, setSettingPanelEnabled] = useState(true);
 	const [apiBase, setApiBase] = useState('');
 	const [setting, setSetting] = useState('');
 	const [isApplying, setIsApplying] = useState(false);
 	const [characterDescription, setCharacterDescription] = useState('');
+
+	const [messages, setMessages] = useState<Message[]>([]);
+	const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
 	// Run extraction when setting changes significantly or on first load
 	/* useEffect(() => {
@@ -82,6 +75,14 @@ export default function App() {
         }
     };
 
+	const resetSession = () => {
+        setMessages([]);
+        setGeneratedImage(null);
+        setCharacterDescription('');
+		setSettingPanelEnabled(true);
+        // extractCharacter();
+    };
+
 	return (
 		<div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-rose-500/30 overflow-hidden">
 			{/* Header */}
@@ -101,10 +102,10 @@ export default function App() {
 							<div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
 							<span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Live Session</span>
 						</div>
-						<button onClick={() => setSettingPanelEnabled(prev => !prev) } className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" title="Setting">
+						{/* <button onClick={() => setSettingPanelEnabled(prev => !prev) } className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" title="Setting">
 							<Settings2 className="w-4 h-4" />
-						</button>
-						<button className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" title="Reset Session">
+						</button> */}
+						<button onClick={resetSession} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" title="Reset Session">
 							<RefreshCcw className="w-4 h-4" />
 						</button>
 					</div>
@@ -139,7 +140,7 @@ export default function App() {
 								<textarea
 									value={setting}
 									onChange={(e) => setSetting(e.target.value)}
-									className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none transition-all min-h-[80px] resize-none"
+									className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none transition-all min-h-[260px] resize-none"
 									placeholder="e.g. Act as my Indian brother, we are studying in college. He is wearing a skyblue tshirt..."
 								/>
 								<button
@@ -153,7 +154,9 @@ export default function App() {
 						</section>
 					</section>
 				) : (
-					<ChatUI characterDescription={characterDescription} apiBase={apiBase} initSetting={setting} />
+					<RPContext.Provider value={{ characterDescription, apiBase, setting, messages, setMessages, generatedImage, setGeneratedImage }}>
+						<ChatUI />
+					</RPContext.Provider>
 				)}
 			</main>
 		</div>
