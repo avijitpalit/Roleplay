@@ -29,6 +29,7 @@ export default function App() {
 	const [setting, setSetting] = useState('');
 	const [isApplying, setIsApplying] = useState(false);
 	const [characterDescription, setCharacterDescription] = useState('');
+	const [lastVisualPrompt, setLastVisualPrompt] = useState('');
 
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -64,10 +65,12 @@ export default function App() {
                 const errorText = await response.text();
                 throw new Error(`Error ${response.status}: ${errorText}`);
             }
-            const dna = await response.text();
+            const data = await response.json();
             // setDna(dna);
-            setCharacterDescription(dna);
-            console.log(dna);
+            setCharacterDescription(data.dna);
+            setLastVisualPrompt(data.visual_prompt);
+            console.log('dna: ', data.dna);
+            console.log('visual_prompt: ', data.visual_prompt);
         } catch (e) {
             console.error("Error extracting character:", e);
         } finally {
@@ -155,7 +158,7 @@ export default function App() {
 						</section>
 					</section>
 				) : (
-					<RPContext.Provider value={{ characterDescription, apiBase, setting, messages, setMessages, generatedImage, setGeneratedImage }}>
+					<RPContext.Provider value={{ characterDescription, apiBase, setting, messages, setMessages, generatedImage, setGeneratedImage, lastVisualPrompt, setLastVisualPrompt }}>
 						<ChatUI />
 					</RPContext.Provider>
 				)}

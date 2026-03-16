@@ -22,7 +22,7 @@ const ChatBubble = () => {
 }
 
 export const ChatUI = () => {
-    const { characterDescription, apiBase, setting, messages, setMessages, generatedImage, setGeneratedImage } = React.useContext(RPContext);
+    const { characterDescription, apiBase, setting, messages, setMessages, generatedImage, setGeneratedImage, lastVisualPrompt, setLastVisualPrompt } = React.useContext(RPContext);
 
     // const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -93,17 +93,19 @@ export const ChatUI = () => {
                     'Bypass-Tunnel-Reminder': 'true',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ history: prompt, recent_actions: recentActions})
+                body: JSON.stringify({ history: prompt, recent_actions: recentActions, last_visual_prompt: lastVisualPrompt})
             });
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Error ${response.status}: ${errorText}`);
             }
-            const reply = await response.text();
-            console.log(reply);
+            const data = await response.json();
+            console.log('reply', data.reply);
+            console.log('last_visual_prompt', data.last_visual_prompt);
 
             // const modelText = response.text || "I'm speechless... tell me more.";
-            setMessages(prev => [...prev, { role: 'AI', text: reply }]);
+            setMessages(prev => [...prev, { role: 'AI', text: data.reply }]);
+            setLastVisualPrompt(data.last_visual_prompt);
         } catch (error) {
             console.error("Chat error:", error);
             setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I lost my train of thought for a moment. What were we saying?" }]);
@@ -162,11 +164,12 @@ export const ChatUI = () => {
             // const visualPrompt = promptResponse.text || `A photorealistic, ultra-detailed portrait of the character in ${setting}, natural HDR lighting, intimate atmosphere.`;
 
             const payload = {
-                refinedPrompt,
+                last_visual_prompt: lastVisualPrompt,
                 width: 768,
                 height: 1344,
                 steps: 8
             };
+            console.log('payload: ', payload);
             console.log("Generating image via API...");
             const response = await fetch(`${apiBase}/generate`, {
                 method: 'POST',
