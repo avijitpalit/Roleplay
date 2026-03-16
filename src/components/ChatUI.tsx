@@ -93,7 +93,7 @@ export const ChatUI = () => {
                     'Bypass-Tunnel-Reminder': 'true',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ history: prompt, recent_actions: recentActions, last_visual_prompt: lastVisualPrompt})
+                body: JSON.stringify({ history: prompt, recent_actions: recentActions, last_visual_prompt: lastVisualPrompt, dna: characterDescription })
             });
             if (!response.ok) {
                 const errorText = await response.text();
