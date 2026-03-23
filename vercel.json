@@ -1,0 +1,12 @@
+{
+  "env": {
+    "MONGODB_URI": "@mongodb_uri"
+  },
+  "build": {
+    "env": {
+      "MONGODB_URI": "@mongodb_uri"
+    }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
+}

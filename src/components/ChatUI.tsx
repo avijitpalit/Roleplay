@@ -22,7 +22,18 @@ const ChatBubble = () => {
 }
 
 export const ChatUI = () => {
-    const { characterDescription, apiBase, setting, messages, setMessages, generatedImage, setGeneratedImage, lastVisualPrompt, setLastVisualPrompt } = React.useContext(RPContext);
+    const {
+        characterDescription,
+        apiBase,
+        setting,
+        messages,
+        setMessages,
+        generatedImage,
+        setGeneratedImage,
+        lastVisualPrompt,
+        setLastVisualPrompt,
+        sessionId
+    } = React.useContext(RPContext);
 
     // const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -49,7 +60,7 @@ export const ChatUI = () => {
         const userMessage: Message = { role: 'User', text: input };
         setMessages(prev => [...prev, userMessage]);
         const updatedMessages = [...messages, userMessage];
-        console.log(updatedMessages);
+        console.log('updatedMessages', updatedMessages);
         setInput('');
         setIsTyping(true);
         try {
@@ -96,19 +107,29 @@ export const ChatUI = () => {
                 body: JSON.stringify({ history: prompt, recent_actions: recentActions, last_visual_prompt: lastVisualPrompt, dna: characterDescription })
             });
             if (!response.ok) {
-                const errorText = await response.text();
+                let errorText = await response.text();
                 throw new Error(`Error ${response.status}: ${errorText}`);
             }
             const data = await response.json();
             console.log('reply', data.reply);
             console.log('last_visual_prompt', data.last_visual_prompt);
 
+            const updateResponse = await fetch('/api/updateMessages', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({sessionId, userReply: input, aiReply: data.reply, lastVisualPrompt: data.last_visual_prompt})
+            });
+            if(!updateResponse.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error ${response.status}: ${errorText}`);
+            }
+
             // const modelText = response.text || "I'm speechless... tell me more.";
             setMessages(prev => [...prev, { role: 'AI', text: data.reply }]);
             setLastVisualPrompt(data.last_visual_prompt);
         } catch (error) {
             console.error("Chat error:", error);
-            setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I lost my train of thought for a moment. What were we saying?" }]);
+            setMessages(prev => [...prev, { role: 'AI', text: "I'm sorry, I lost my train of thought for a moment. What were we saying?" }]);
         } finally {
             setIsTyping(false);
         }
