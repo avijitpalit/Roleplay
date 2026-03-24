@@ -9,6 +9,7 @@ export async function connectDB() {
     }
 
     console.log('Creating new connection');
+    console.log(process.env.MONGODB_URI);
     const client = new MongoClient(process.env.MONGODB_URI, {
         maxPoolSize: 10,
         minPoolSize: 1
