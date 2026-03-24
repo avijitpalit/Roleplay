@@ -1,7 +1,4 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "env": {
-    "MONGODB_URI": "MONGODB_URI"
-  }
+  "outputDirectory": "dist"
 }
