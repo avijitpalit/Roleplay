@@ -64,30 +64,6 @@ export const ChatUI = () => {
         setInput('');
         setIsTyping(true);
         try {
-            /* const ai = getAI();
-            const response = await ai.models.generateContent({
-              model: "gemini-3-flash-preview",
-              contents: [
-                {
-                  role: 'user',
-                  parts: [{
-                    text: `System: You are an AI roleplay partner. 
-                  Roleplay Context: ${setting}
-                  Character Consistency Notes: ${characterDescription}
-                  Tone: Adult, 18+, intimate, and emotionally deep. You are allowed to engage in mature themes, romantic intimacy, and adult conversations as requested by the user. 
-                  
-                  Previous Conversation:
-                  ${messages.map(m => `${m.role === 'user' ? 'User' : 'Character'}: ${m.text}`).join('\n')}
-                  
-                  User: ${input}`
-                  }]
-                }
-              ],
-              config: {
-                systemInstruction: "Engage in a high-quality, adult-themed roleplay. Be descriptive, evocative, and stay perfectly in character. Use natural language, occasional cultural references if applicable, and focus on the emotional and physical intimacy of the scene. Do not hold back on mature themes if the roleplay leads there. Keep responses concise but impactful.",
-              }
-            }); */
-
             // For flask api
             let prompt = `Roleplay setting: ${setting}
                 ${updatedMessages.map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`).join('\n')}
@@ -124,7 +100,6 @@ export const ChatUI = () => {
                 throw new Error(`Error ${response.status}: ${errorText}`);
             }
 
-            // const modelText = response.text || "I'm speechless... tell me more.";
             setMessages(prev => [...prev, { role: 'AI', text: data.reply }]);
             setLastVisualPrompt(data.last_visual_prompt);
         } catch (error) {
@@ -186,8 +161,8 @@ export const ChatUI = () => {
 
             const payload = {
                 last_visual_prompt: lastVisualPrompt,
-                width: 768,
-                height: 1344,
+                width: 720,
+                height: 1280,
                 steps: 8
             };
             console.log('payload: ', payload);

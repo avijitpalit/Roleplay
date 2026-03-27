@@ -37,24 +37,9 @@ export default function App() {
 	const [sessionId, setSessionId] = useState("");
 	const [historyList, setHistoryList] = useState([]);
 
-	// Run extraction when setting changes significantly or on first load
-	/* useEffect(() => {
-	  if (setting && !characterDescription) {
-		extractCharacter();
-	  }
-	}, [setting]); */
-
 	const extractCharacter = async () => {
         if (!setting) return;
         try {
-            /* const ai = getAI();
-            const response = await ai.models.generateContent({
-              model: "gemini-3-flash-preview",
-              contents: [{ text: `Based on this roleplay setting: "${setting}", extract a detailed physical description of the character I am roleplaying with. Focus on facial features, skin tone, hair style, and general build. This will be used to maintain visual consistency in AI images. Keep it concise but descriptive.` }]
-            });
-            setCharacterDescription(response.text || '');
-            console.log(response.text) */
-
             setIsApplying(true);
             let response = await fetch(`${apiBase}/init_char_dna`, {
                 method: 'POST',
@@ -69,6 +54,7 @@ export default function App() {
                 throw new Error(`Error ${response.status}: ${errorText}`);
             }
             const data = await response.json();
+			console.log(data);
             // setDna(dna);
             
 			response = await fetch('/api/initRoleplay', {
@@ -212,7 +198,7 @@ export default function App() {
 
 									<button
 										onClick={testFunc}
-										className="self-end px-6 py-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 rounded-xl text-[14px] font-bold uppercase tracking-wider transition-all text-rose-400 cursor-pointer"
+										className="hidden self-end px-6 py-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 rounded-xl text-[14px] font-bold uppercase tracking-wider transition-all text-rose-400 cursor-pointer"
 									>
 										DB Test
 									</button>
