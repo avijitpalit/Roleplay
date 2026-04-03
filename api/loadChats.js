@@ -2,7 +2,7 @@ import { connectDB } from './db.js';
 
 export default async function handler(req, res) {
     try {
-        console.log('load chats start');
+        // console.log('load chats start');
         const collection = await connectDB(); console.log('after connect db');
         const docs = await collection.find({}).sort({ createdAt: -1 }).toArray();
         // console.log(docs);

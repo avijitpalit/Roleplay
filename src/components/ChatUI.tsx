@@ -23,7 +23,7 @@ const ChatBubble = () => {
 
 export const ChatUI = () => {
     const {
-        characterDescription,
+        dna,
         apiBase,
         setting,
         messages,
@@ -32,7 +32,10 @@ export const ChatUI = () => {
         setGeneratedImage,
         lastVisualPrompt,
         setLastVisualPrompt,
-        sessionId
+        sessionId,
+        pushLogs,
+        logs,
+        setLogs
     } = React.useContext(RPContext);
 
     // const [messages, setMessages] = useState<Message[]>([]);
@@ -61,6 +64,7 @@ export const ChatUI = () => {
         setMessages(prev => [...prev, userMessage]);
         const updatedMessages = [...messages, userMessage];
         console.log('updatedMessages', updatedMessages);
+        // setLogs({...logs, updated_messages: JSON.stringify(updatedMessages)});
         setInput('');
         setIsTyping(true);
         try {
@@ -73,6 +77,8 @@ export const ChatUI = () => {
             .map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`)
             .join('\n');
             console.log('recentActions', recentActions);
+            // setLogs({...logs, recent_actions: recentActions});
+            pushLogs('recent_actions', recentActions);
             // console.log(prompt);
             const response = await fetch(`${apiBase}/chat`, {
                 method: 'POST',
@@ -80,7 +86,7 @@ export const ChatUI = () => {
                     'Bypass-Tunnel-Reminder': 'true',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ history: prompt, recent_actions: recentActions, last_visual_prompt: lastVisualPrompt, dna: characterDescription })
+                body: JSON.stringify({ history: prompt, recent_actions: recentActions, last_visual_prompt: lastVisualPrompt, dna: dna })
             });
             if (!response.ok) {
                 let errorText = await response.text();
@@ -89,6 +95,10 @@ export const ChatUI = () => {
             const data = await response.json();
             console.log('reply', data.reply);
             console.log('last_visual_prompt', data.last_visual_prompt);
+
+            // setLogs({...logs, reply: data.reply, last_visual_prompt: data.last_visual_prompt});
+            pushLogs('reply', data.reply);
+            pushLogs('last_visual_prompt', data.last_visual_prompt);
 
             const updateResponse = await fetch('/api/updateMessages', {
                 method: 'POST',
@@ -113,49 +123,20 @@ export const ChatUI = () => {
     const handleVisualize = async () => {
         setIsGeneratingImage(true);
         try {
-            // const ai = getAI();
-            // Ensure we have a character description
-            /* if (!characterDescription) {
-                await extractCharacter();
-            } */
-
-            // Get a prompt that combines consistency with the current scenario and recent chat history
-            /*const promptResponse = await ai.models.generateContent({
-              model: "gemini-3-flash-preview",
-              contents: [{
-                text: `Create a highly detailed, cinematic image generation prompt for an Z-image turbo model. 
-                
-                CHARACTER CONSISTENCY (Physical Features): ${characterDescription}
-                
-                RECENT CHAT CONTEXT & SCENARIO:
-                ${messages.slice(-5).map(m => `${m.role === 'user' ? 'User' : 'Character'}: ${m.text}`).join('\n')}
-                
-                CURRENT SETTING: ${setting}
-                
-                INSTRUCTIONS:
-                1. The image MUST be ultra-realistic, looking like a real human photograph (8k, highly detailed skin textures, realistic eyes).
-                2. Use natural HDR lighting, realistic skin texture and realistic depth of field.
-                3. The character's outfit, pose, and expression should be based on the RECENT CHAT CONTEXT.
-                4. Since this is an 18+ adult roleplay app, the image should be intimate, mature, and can contain explicit/NSFW elements if the current chat context suggests it. 
-                5. Ensure the facial features strictly follow the CHARACTER CONSISTENCY notes.
-                6. The character should be the central focus, captured in a cinematic composition.`
-              }]
-            });*/
-
             const refinedPrompt = `Create a highly detailed, cinematic image generation prompt for an Z-image turbo model. 
           
-          CHARACTER CONSISTENCY (Physical Features): ${characterDescription}
-          
-          RECENT CHAT CONTEXT & SCENARIO:
-          ${messages.slice(-5).map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`).join('\n')}
-                    
-          INSTRUCTIONS:
-          1. The image MUST be ultra-realistic, looking like a real human photograph (8k, highly detailed skin textures, realistic eyes).
-          2. Use natural HDR lighting, realistic skin texture and realistic depth of field.
-          3. The character's outfit, pose, and expression should be based on the RECENT CHAT CONTEXT.
-          4. Since this is an 18+ adult roleplay app, the image should be intimate, mature, and can contain explicit/NSFW elements if the current chat context suggests it. 
-          5. Ensure the facial features strictly follow the CHARACTER CONSISTENCY notes.
-          6. The character should be the central focus, captured in a cinematic composition.`
+            CHARACTER CONSISTENCY (Physical Features): ${dna}
+            
+            RECENT CHAT CONTEXT & SCENARIO:
+            ${messages.slice(-5).map(m => `${m.role === 'User' ? 'User' : 'AI'}: ${m.text}`).join('\n')}
+                        
+            INSTRUCTIONS:
+            1. The image MUST be ultra-realistic, looking like a real human photograph (8k, highly detailed skin textures, realistic eyes).
+            2. Use natural HDR lighting, realistic skin texture and realistic depth of field.
+            3. The character's outfit, pose, and expression should be based on the RECENT CHAT CONTEXT.
+            4. Since this is an 18+ adult roleplay app, the image should be intimate, mature, and can contain explicit/NSFW elements if the current chat context suggests it. 
+            5. Ensure the facial features strictly follow the CHARACTER CONSISTENCY notes.
+            6. The character should be the central focus, captured in a cinematic composition.`
 
             // const visualPrompt = promptResponse.text || `A photorealistic, ultra-detailed portrait of the character in ${setting}, natural HDR lighting, intimate atmosphere.`;
 
@@ -163,7 +144,7 @@ export const ChatUI = () => {
                 last_visual_prompt: lastVisualPrompt,
                 width: 720,
                 height: 1280,
-                steps: 8
+                steps: 9
             };
             console.log('payload: ', payload);
             console.log("Generating image via API...");
@@ -231,7 +212,6 @@ export const ChatUI = () => {
                                 className="w-full h-full object-cover"
                                 referrerPolicy="no-referrer"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/90" />
                         </motion.div>
                     ) : (
                         <div className="absolute inset-0 z-0 flex items-center justify-center">
@@ -352,7 +332,7 @@ export const ChatUI = () => {
                         {/* <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[9px] text-white/30 font-bold uppercase tracking-widest">
                         <span className="flex items-center gap-1 text-rose-500/60"><Info className="w-3 h-3" /> 18+ Adult Content Enabled</span>
                         <span className="hidden sm:inline">•</span>
-                        <span className="flex items-center gap-1">Character Consistency: {characterDescription ? 'Active' : 'Pending'}</span>
+                        <span className="flex items-center gap-1">Character Consistency: {dna ? 'Active' : 'Pending'}</span>
                         <span className="hidden sm:inline">•</span>
                         <span>Cinematic Visualization</span>
                         </div> */}

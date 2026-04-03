@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useRef, useEffect, createContext, useContext } from 'react';
-import { GoogleGenAI } from "@google/genai";
-import { Send, Image as ImageIcon, Sparkles, User, Heart, Settings, Loader2, Info, RefreshCcw, Eye, EyeOff, Settings2, Link2 } from 'lucide-react';
+// import { GoogleGenAI } from "@google/genai";
+import { Image as ImageIcon, Sparkles, Heart, RefreshCcw, Link2, Logs, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatUI } from './components/ChatUI';
 import ChatList from './components/ChatList';
+import LogsUI from './components/Logs';
 
 export const RPContext = createContext(null);
 
@@ -18,11 +19,11 @@ interface Message {
 }
 
 // Helper to get AI instance
-const getAI = () => {
+/* const getAI = () => {
 	return new GoogleGenAI({
 		apiKey: process.env.GEMINI_API_KEY || ''
 	});
-};
+}; */
 
 export default function App() {
 	const [settingPanelEnabled, setSettingPanelEnabled] = useState(true);
@@ -36,6 +37,15 @@ export default function App() {
 	const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 	const [sessionId, setSessionId] = useState("");
 	const [historyList, setHistoryList] = useState([]);
+	const [logs, setLogs] = useState({});
+	const [logsUIShow, setLogsUIShow] = useState(false);
+
+	const pushLogs = (key, value) => {
+		setLogs(prevLogs => ({
+			...prevLogs,
+			[key]: value // Square brackets allow dynamic keys
+		}));
+	};
 
 	const extractCharacter = async () => {
         if (!setting) return;
@@ -56,6 +66,9 @@ export default function App() {
             const data = await response.json();
 			console.log(data);
             // setDna(dna);
+			// setLogs({...logs, dna: data.dna, visual_prompt: data.visual_prompt});
+			pushLogs('dna', data.dna);
+			pushLogs('visual_prompt', data.visual_prompt);
             
 			response = await fetch('/api/initRoleplay', {
 				method: 'POST',
@@ -128,7 +141,10 @@ export default function App() {
 			setHistoryList,
 			setSettingPanelEnabled,
 			setCharacterDescription,
-			setSessionId
+			setSessionId,
+			pushLogs,
+			logs,
+			setLogs
 			}}>
 				{/* Header */}
 				<header className="border-b border-white/10 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
@@ -147,9 +163,12 @@ export default function App() {
 								<div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
 								<span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Live Session</span>
 							</div>
-							{/* <button onClick={() => setSettingPanelEnabled(prev => !prev) } className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" title="Setting">
-								<Settings2 className="w-4 h-4" />
-							</button> */}
+							<button className={`p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 ${ logsUIShow && 'bg-white/10' }`} title="Show logs">
+								<Logs className="w-4 h-4" onClick={ () => { setLogsUIShow(prev => !prev) } } />
+							</button>
+							<button className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" title="Setting" onClick={() => { console.log(logs); }} >
+								<Settings2 className="w-4 h-4"/>
+							</button>
 							<button onClick={resetSession} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" title="Reset Session">
 								<RefreshCcw className="w-4 h-4" />
 							</button>
@@ -158,6 +177,14 @@ export default function App() {
 				</header>
 
 				<main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4 w-full grow">
+					{ logsUIShow && (
+						<section className='bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-md'>
+							<p className="text-white">Logs</p>
+							<hr className="border-t border-gray-700 my-3" />
+							<LogsUI logs={logs} />
+						</section>
+					) }
+					
 					{/* Setting panel */}
 					{settingPanelEnabled ? (
 						<section className='bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-md'>

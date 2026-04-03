@@ -6,7 +6,7 @@ export default async function handler(req, res) {
         const collection = await connectDB();
         // const db = client.db('roleplay');
         const {sessionId, userReply, aiReply, lastVisualPrompt} = req.body;
-        console.log(req.body);
+        // console.log(req.body);
 
         // const existingDoc = await db.collection('sessions').findOne({ _id: new ObjectId('69bfc0d4dd4ee0dffa4e8a13') });
         // console.log('Existing document:', existingDoc);
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
                 }
             }
         );
-        console.log(result);
+        // console.log(result);
 
         res.status(200).json({success: true});
     } catch (error) {
